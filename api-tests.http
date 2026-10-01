@@ -1,0 +1,194 @@
+@baseUrl = http://localhost:8080
+@auth = Basic dXNlcjpwYXNzd29yZA==
+
+### 1) Criar especialidade
+POST {{baseUrl}}/especialidades
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "nome": "Cardiologia"
+}
+
+### 2) Criar profissional vinculado à especialidade
+POST {{baseUrl}}/profissionais
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "nome": "Dr. Carlos Teste",
+  "cpf": "12345678900",
+  "telefone": "11999999999",
+  "especialidadeId": 1
+}
+
+### 3) Criar paciente
+POST {{baseUrl}}/pacientes
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "nome": "Ana Teste",
+  "cpf": "98765432100",
+  "telefone": "11888888888",
+  "email": "ana.teste@email.com",
+  "dataNascimento": "1990-05-10"
+}
+
+### 4) Criar consulta com conflito (mesmo profissional, 14:00 e 14:20)
+POST {{baseUrl}}/consultas
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "pacienteId": 1,
+  "profissionalId": 1,
+  "dataHora": "2026-10-10T14:00:00"
+}
+
+### 5) Segunda consulta conflituosa
+POST {{baseUrl}}/consultas
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "pacienteId": 1,
+  "profissionalId": 1,
+  "dataHora": "2026-10-10T14:20:00"
+}
+
+### 6) Criar consulta sem conflito (14:00 e 15:00)
+POST {{baseUrl}}/consultas
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "pacienteId": 1,
+  "profissionalId": 1,
+  "dataHora": "2026-10-10T15:00:00"
+}
+
+### 7) Cancelar consulta
+PATCH {{baseUrl}}/consultas/1/cancelar
+Authorization: {{auth}}
+
+### 8) Tentar criar consulta no mesmo horário de uma cancelada
+POST {{baseUrl}}/consultas
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "pacienteId": 1,
+  "profissionalId": 1,
+  "dataHora": "2026-10-10T14:00:00"
+}
+
+### 9) Buscar paciente inexistente
+GET {{baseUrl}}/pacientes/999999
+Authorization: {{auth}}
+
+### 10) Buscar especialidade inexistente
+GET {{baseUrl}}/especialidades/999999
+Authorization: {{auth}}
+
+### 11) Buscar profissional inexistente
+GET {{baseUrl}}/profissionais/999999
+Authorization: {{auth}}
+
+### 12) Buscar consulta inexistente
+GET {{baseUrl}}/consultas/999999
+Authorization: {{auth}}
+
+### 13) Paciente inválido
+POST {{baseUrl}}/pacientes
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "nome": "",
+  "cpf": "",
+  "telefone": "11999999999",
+  "email": "email-invalido",
+  "dataNascimento": null
+}
+
+### 14) Deletar recurso inexistente
+DELETE {{baseUrl}}/pacientes/999999
+Authorization: {{auth}}
+
+### 15) CRUD completo - especialidade
+GET {{baseUrl}}/especialidades
+Authorization: {{auth}}
+
+### 16) PUT especialidade
+PUT {{baseUrl}}/especialidades/1
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "nome": "Cardiologia Atualizada"
+}
+
+### 17) DELETE especialidade
+DELETE {{baseUrl}}/especialidades/1
+Authorization: {{auth}}
+
+### 18) CRUD completo - profissional
+GET {{baseUrl}}/profissionais
+Authorization: {{auth}}
+
+### 19) PUT profissional
+PUT {{baseUrl}}/profissionais/1
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "nome": "Dr. Carlos Atualizado",
+  "cpf": "12345678900",
+  "telefone": "11999887766",
+  "especialidadeId": 1
+}
+
+### 20) DELETE profissional
+DELETE {{baseUrl}}/profissionais/1
+Authorization: {{auth}}
+
+### 21) CRUD completo - paciente
+GET {{baseUrl}}/pacientes
+Authorization: {{auth}}
+
+### 22) PUT paciente
+PUT {{baseUrl}}/pacientes/1
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "nome": "Ana Atualizada",
+  "cpf": "98765432100",
+  "telefone": "11888888777",
+  "email": "ana.atualizada@email.com",
+  "dataNascimento": "1991-06-15"
+}
+
+### 23) DELETE paciente
+DELETE {{baseUrl}}/pacientes/1
+Authorization: {{auth}}
+
+### 24) CRUD completo - consulta
+GET {{baseUrl}}/consultas
+Authorization: {{auth}}
+
+### 25) PUT consulta
+PUT {{baseUrl}}/consultas/1
+Authorization: {{auth}}
+Content-Type: application/json
+
+{
+  "pacienteId": 1,
+  "profissionalId": 1,
+  "dataHora": "2026-10-10T16:00:00"
+}
+
+### 26) DELETE consulta
+DELETE {{baseUrl}}/consultas/1
+Authorization: {{auth}}

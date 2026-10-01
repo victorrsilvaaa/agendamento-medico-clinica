@@ -2,6 +2,8 @@ package com.joao_agenda.agendamento_medico_clinica.service;
 
 import com.joao_agenda.agendamento_medico_clinica.dto.ConsultaRequestDTO;
 import com.joao_agenda.agendamento_medico_clinica.dto.ConsultaResponseDTO;
+import com.joao_agenda.agendamento_medico_clinica.exception.ConflitoException;
+import com.joao_agenda.agendamento_medico_clinica.exception.RecursoNaoEncontradoException;
 import com.joao_agenda.agendamento_medico_clinica.model.Consulta;
 import com.joao_agenda.agendamento_medico_clinica.model.Paciente;
 import com.joao_agenda.agendamento_medico_clinica.model.Profissional;
@@ -11,6 +13,7 @@ import com.joao_agenda.agendamento_medico_clinica.repository.PacienteRepository;
 import com.joao_agenda.agendamento_medico_clinica.repository.ProfissionalRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -26,12 +29,42 @@ public class ConsultaService {
         this.profissionalRepository = profissionalRepository;
     }
 
+    private static final int DURACAO_CONSULTA_MINUTOS = 40;
+
+    private void verificarConflito(Long profissionalId, LocalDateTime dataHora) {
+        LocalDateTime limiteInferior = dataHora.minusMinutes(DURACAO_CONSULTA_MINUTOS);
+        LocalDateTime limiteSuperior = dataHora.plusMinutes(DURACAO_CONSULTA_MINUTOS);
+
+        List<Consulta> conflitantes = consultaRepository.buscarConflitantes(
+                profissionalId, limiteInferior, limiteSuperior
+        );
+
+        if (!conflitantes.isEmpty()) {
+            throw new ConflitoException("Profissional já possui consulta agendada nesse horário");
+        }
+    }
+
+    private void verificarConflitoParaAtualizacao(Long profissionalId, LocalDateTime dataHora, Long consultaId) {
+        LocalDateTime limiteInferior = dataHora.minusMinutes(DURACAO_CONSULTA_MINUTOS);
+        LocalDateTime limiteSuperior = dataHora.plusMinutes(DURACAO_CONSULTA_MINUTOS);
+
+        List<Consulta> conflitantes = consultaRepository.buscarConflitantesParaAtualizacao(
+                profissionalId, limiteInferior, limiteSuperior, consultaId
+        );
+
+        if (!conflitantes.isEmpty()) {
+            throw new ConflitoException("Profissional já possui consulta agendada nesse horário");
+        }
+    }
+
     public ConsultaResponseDTO salvar(ConsultaRequestDTO dto) {
         Paciente paciente = pacienteRepository.findById(dto.pacienteId())
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado"));
 
         Profissional profissional = profissionalRepository.findById(dto.profissionalId())
-                .orElseThrow(() -> new RuntimeException("Profissional não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Profissional não encontrado"));
+
+        verificarConflito(dto.profissionalId(), dto.dataHora());
 
         Consulta consulta = new Consulta();
         consulta.setPaciente(paciente);
@@ -52,19 +85,21 @@ public class ConsultaService {
 
     public ConsultaResponseDTO buscarPorId(Long id) {
         Consulta consulta = consultaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Consulta não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta não encontrada"));
         return ConsultaResponseDTO.fromEntity(consulta);
     }
 
     public ConsultaResponseDTO atualizar(Long id, ConsultaRequestDTO dto) {
         Consulta consulta = consultaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Consulta não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta não encontrada"));
 
         Paciente paciente = pacienteRepository.findById(dto.pacienteId())
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado"));
 
         Profissional profissional = profissionalRepository.findById(dto.profissionalId())
-                .orElseThrow(() -> new RuntimeException("Profissional não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Profissional não encontrado"));
+
+        verificarConflitoParaAtualizacao(dto.profissionalId(), dto.dataHora(), id);
 
         consulta.setPaciente(paciente);
         consulta.setProfissional(profissional);
@@ -76,7 +111,7 @@ public class ConsultaService {
 
     public ConsultaResponseDTO cancelar(Long id) {
         Consulta consulta = consultaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Consulta não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Consulta não encontrada"));
 
         consulta.setStatus(StatusConsulta.CANCELADA);
 
@@ -86,7 +121,7 @@ public class ConsultaService {
 
     public void deletar(Long id) {
         if (!consultaRepository.existsById(id)) {
-            throw new RuntimeException("Consulta não encontrada");
+            throw new RecursoNaoEncontradoException("Consulta não encontrada");
         }
         consultaRepository.deleteById(id);
     }

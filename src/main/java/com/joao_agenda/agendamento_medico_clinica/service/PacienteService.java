@@ -2,6 +2,7 @@ package com.joao_agenda.agendamento_medico_clinica.service;
 
 import com.joao_agenda.agendamento_medico_clinica.dto.PacienteRequestDTO;
 import com.joao_agenda.agendamento_medico_clinica.dto.PacienteResponseDTO;
+import com.joao_agenda.agendamento_medico_clinica.exception.RecursoNaoEncontradoException;
 import com.joao_agenda.agendamento_medico_clinica.model.Paciente;
 import com.joao_agenda.agendamento_medico_clinica.repository.PacienteRepository;
 import org.springframework.stereotype.Service;
@@ -34,14 +35,14 @@ public class PacienteService {
 
     public PacienteResponseDTO buscarPorId(Long id) {
         Paciente paciente = pacienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado"));
 
         return PacienteResponseDTO.fromEntity(paciente);
     }
 
     public PacienteResponseDTO atualizar(Long id, PacienteRequestDTO dto) {
         Paciente paciente = pacienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Paciente não encontrado"));
 
         paciente.setNome(dto.nome());
         paciente.setCpf(dto.cpf());
@@ -55,10 +56,8 @@ public class PacienteService {
 
     public void deletar(Long id) {
         if (!pacienteRepository.existsById(id)) {
-            throw new RuntimeException("Paciente não encontrado");
+            throw new RecursoNaoEncontradoException("Paciente não encontrado");
         }
         pacienteRepository.deleteById(id);
     }
 }
-
-

@@ -2,6 +2,7 @@ package com.joao_agenda.agendamento_medico_clinica.service;
 
 import com.joao_agenda.agendamento_medico_clinica.dto.EspecialidadeRequestDTO;
 import com.joao_agenda.agendamento_medico_clinica.dto.EspecialidadeResponseDTO;
+import com.joao_agenda.agendamento_medico_clinica.exception.RecursoNaoEncontradoException;
 import com.joao_agenda.agendamento_medico_clinica.model.Especialidade;
 import com.joao_agenda.agendamento_medico_clinica.repository.EspecialidadeRepository;
 import org.springframework.stereotype.Service;
@@ -31,13 +32,13 @@ public class EspecialidadeService {
 
     public EspecialidadeResponseDTO buscarPorId(Long id) {
         Especialidade especialidade = especialidadeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Especialidade não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Especialidade não encontrada"));
         return EspecialidadeResponseDTO.fromEntity(especialidade);
     }
 
     public EspecialidadeResponseDTO atualizar(Long id, EspecialidadeRequestDTO dto) {
         Especialidade especialidade = especialidadeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Especialidade não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Especialidade não encontrada"));
 
         especialidade.setNome(dto.nome());
 
@@ -47,7 +48,7 @@ public class EspecialidadeService {
 
     public void deletar(Long id) {
         if (!especialidadeRepository.existsById(id)) {
-            throw new RuntimeException("Especialidade não encontrada");
+            throw new RecursoNaoEncontradoException("Especialidade não encontrada");
         }
         especialidadeRepository.deleteById(id);
     }
